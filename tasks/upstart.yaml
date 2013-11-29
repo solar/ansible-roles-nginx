@@ -1,0 +1,7 @@
+- name: install upstart init file
+  tags:
+    - nginx-install
+    - nginx-upstart
+  template: src={{ nginx_upstart_template }} dest={{ nginx_upstart_path }}
+  notify:
+    - stop/start nginx

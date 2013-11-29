@@ -1,0 +1,14 @@
+- name: cleanup the nginx working directory
+  file: path={{ nginx_working_dir }} state=absent
+
+- name: restart nginx
+  service: name={{ nginx_name }} state=restarted
+
+- name: stop/start nginx
+  service: name={{ nginx_name }} state={{ item }}
+  with_items:
+    - stopped
+    - started
+
+- name: reload nginx
+  service: name={{ nginx_name }} state=reloaded

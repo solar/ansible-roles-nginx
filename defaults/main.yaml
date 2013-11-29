@@ -1,0 +1,62 @@
+tmp_dir: /tmp
+var_dir: /var
+etc_dir: /etc
+
+log_dir: '{{ var_dir }}/log'
+upstart_dir: '{{ etc_dir }}/init'
+
+templates_base: '.'
+
+nginx_name: nginx
+nginx_working_dir: '{{ tmp_dir }}/ansible/nginx'
+
+nginx_prefix: '/usr/local/nginx'
+nginx_path: '{{ nginx_prefix}}/sbin/nginx'
+
+nginx_config_dir: '{{ etc_dir }}/nginx'
+nginx_log_dir: '{{ log_dir }}/nginx'
+nginx_home_dir: '{{ var_dir }}/nginx'
+
+nginx_version: 1.4.3
+nginx_url: 'http://nginx.org/download/nginx-{{ nginx_version }}.tar.gz'
+
+nginx_upstart_template: '{{ templates_base }}/nginx.upstart'
+nginx_upstart_path: '{{ upstart_dir }}/{{ nginx_name }}.conf'
+
+nginx_user: nginx
+nginx_group: nginx
+
+nginx_required_yum_packages:
+  - name: openssl-devel
+  - name: zlib-devel
+  - name: pcre-devel
+
+nginx_optional_yum_packages: []
+
+nginx_configure_options:
+  '--prefix={{ nginx_prefix }}
+  --conf-path={{ nginx_config_dir }}/nginx.conf
+  --error-log-path={{ nginx_log_dir }}/error.log
+  --http-log-path={{ nginx_log_dir }}/access.log
+  --pid-path={{ nginx_home_dir }}/run/pid
+  --lock-path={{ nginx_home_dir }}/run/lock
+  --http-client-body-temp-path={{ nginx_home_dir }}/client_body_temp
+  --http-fastcgi-temp-path={{ nginx_home_dir }}/fastcgi_temp
+  --http-uwsgi-temp-path={{ nginx_home_dir }}/uwsgi_temp
+  --http-scgi-temp-path={{ nginx_home_dir }}/scgi_temp
+  --user={{ nginx_user }}
+  --group={{ nginx_group }}
+  --with-http_ssl_module
+  --with-http_spdy_module
+  --without-http_ssi_module
+  --without-http_userid_module
+  --without-http_autoindex_module
+  --without-http_split_clients_module
+  --without-http_scgi_module
+  --without-http_memcached_module
+  --without-http_limit_conn_module
+  --without-http_limit_req_module
+  --without-http_empty_gif_module
+  --without-mail_pop3_module
+  --without-mail_imap_module
+  --without-mail_smtp_module'

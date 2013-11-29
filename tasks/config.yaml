@@ -1,0 +1,58 @@
+- name: ensure the config directory is clean
+  tags:
+    - nginx-install
+    - nginx-config
+  file: path={{ nginx_config_dir }}
+  args: item
+  with_items:
+    - state: absent
+    - state: directory
+      owner: '{{ nginx_user }}'
+      group: '{{ nginx_group }}'
+      mode: '0755'
+      recurse: true
+
+- name: conf.d/vhosts.d
+  tags:
+    - nginx-install
+    - nginx-config
+  file: path={{ item }} state=directory owner={{ nginx_user }}
+    group={{ nginx_group }}
+  with_items:
+    - '{{ nginx_config_dir }}/conf.d'
+    - '{{ nginx_config_dir }}/vhosts.d'
+
+- name: root config files
+  tags:
+    - nginx-install
+    - nginx-config
+  template: src={{ item }} dest={{ nginx_config_dir }}/
+    owner={{ nginx_user }} group={{ nginx_group }} mode=0600
+  with_fileglob:
+    - '../templates/{{ templates_base }}/conf/*'
+
+- name: conf.d config files
+  tags:
+    - nginx-install
+    - nginx-config
+  template: src={{ item }} dest={{ nginx_config_dir }}/conf.d/
+    owner={{ nginx_user }} group={{ nginx_group }} mode=0600
+  with_fileglob:
+    - '../templates/{{ templates_base }}/conf/conf.d/*.conf'
+
+- name: vhosts.d config files
+  tags:
+    - nginx-install
+    - nginx-config
+  template: src={{ item }} dest={{ nginx_config_dir }}/vhosts.d/
+    owner={{ nginx_user }} group={{ nginx_group }} mode=0600
+  with_fileglob:
+    - '../templates/{{ templates_base }}/conf/vhosts.d/*.conf'
+
+- name: test configuration
+  tags:
+    - nginx-install
+    - nginx-config
+  command: '{{ nginx_path }} -t -c {{ nginx_config_dir }}/nginx.conf'
+  notify:
+    - reload nginx

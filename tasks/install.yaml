@@ -1,0 +1,58 @@
+- name: create group
+  tags:
+    - nginx-install
+  group: name={{ nginx_group }} system=yes state=present
+
+- name: create user
+  tags:
+    - nginx-install
+  user: name={{ nginx_user }} system=yes group={{ nginx_group }}
+    home={{ nginx_home_dir }} createhome=no shell=/sbin/nologin
+
+- name: check required yum packages
+  tags:
+    - nginx-install
+  yum: state=present
+  args: item
+  with_items: nginx_required_yum_packages + nginx_optional_yum_packages
+  when: ansible_pkg_mgr == 'yum'
+
+- name: check nginx is installed
+  tags:
+    - nginx-install
+  file: path={{ nginx_path }} state=file
+  ignore_errors: true
+  register: _nginx_installed
+
+- name: fetch the archive
+  tags:
+    - nginx-install
+  get_url: url={{ nginx_url }} dest={{ nginx_working_dir }}/
+  register: _nginx_fetched_archive
+  when: _nginx_installed.failed or nginx_upgrade is defined
+
+- name: extract from the archive
+  tags:
+    - nginx-install
+  command: tar -zx --no-same-owner -f {{ _nginx_fetched_archive.dest }}
+      chdir={{ nginx_working_dir }}
+  when: _nginx_installed.failed or nginx_upgrade is defined
+
+- name: find the extracted directory
+  tags:
+    - nginx-install
+  command: find {{ nginx_working_dir }} -mindepth 1 -maxdepth 1 -type d -name 'nginx*'
+  register: _nginx_extracted_dir
+  when: _nginx_installed.failed or nginx_upgrade is defined
+
+- name: configure/make/install
+  tags:
+    - nginx-install
+  command: '{{ item }} chdir={{ _nginx_extracted_dir.stdout }}'
+  with_items:
+    - ./configure {{ nginx_configure_options }}
+    - make
+    - make install
+  notify:
+    - restart nginx
+  when: _nginx_installed.failed or nginx_upgrade is defined
